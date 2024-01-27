@@ -6,6 +6,8 @@ terraform {
     bucket         = "jenkins-backend-bucket-cicd"
     key            = "jjtech/terraform.tfstate"
     region         = "us-east-1"
+    access_key     = "AKIAQIAZ5BXO77WJQH4R"
+    secret_key     = "wNRboRUO1OG8EzSk5zDXK7dCRahJIyKfbSbrhtoK"
 
     # Replace this with your DynamoDB table name!
     dynamodb_table = "cicd-demo-table"
