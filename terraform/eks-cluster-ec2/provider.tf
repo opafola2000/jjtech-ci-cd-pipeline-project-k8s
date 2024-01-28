@@ -6,7 +6,6 @@ terraform {
     bucket         = "jenkins-backend-bucket-cicd"
     key            = "jjtech/terraform.tfstate"
     region         = "us-east-1"
-    aws_profile	   = "default"
 
     # Replace this with your DynamoDB table name!
     dynamodb_table = "cicd-demo-table"
@@ -22,6 +21,7 @@ terraform {
 
 provider "aws" {
   region = var.region
+  profile = "default"
   default_tags {
     tags = {
       Name    = "k8s_immersion_batch"
