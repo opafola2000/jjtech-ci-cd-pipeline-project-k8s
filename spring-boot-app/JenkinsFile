@@ -1,11 +1,13 @@
 pipeline {
-  agent any
+  agent any  #means any jenkins agent/servers in a situation where we have jenkins cluster.
   
+
+  // environment variables to be stored on jenkins server.
   environment {
         WORKSPACE = "${env.WORKSPACE}"
         AWS_DEFAULT_REGION = "us-east-1"
     }
-
+  // global tools configs in our jenkins servers. We are callings the tools we configured in jenkins.
   tools {
     terraform 'terraform'
     maven 'localMaven'
@@ -15,7 +17,7 @@ pipeline {
   stages {
     stage('Git Checkout') {
       steps {
-        echo 'Cloning the application code...'
+        echo 'Cloning the application code...'   // cloning our github source code.
         git branch: 'main', url: 'https://github.com/opafola2000/jjtech-ci-cd-pipeline-project-k8s.git'
       }
     }
@@ -28,7 +30,7 @@ pipeline {
            sh 'terraform fmt'
            sh 'terraform validate'
            sh 'terraform plan -out=tfplan'
-           stash includes: 'tfplan', name: 'terraform-plan'
+           stash includes: 'tfplan', name: 'terraform-plan'  //stash = savings WIP
          }
        }
      }
@@ -111,64 +113,64 @@ pipeline {
      }
 
 
-    stage('Build and Push Docker Image') {
-      environment {
-        awsAccountId = '017234202077'
-        region = 'us-east-1'
-        repositoryName = 'tommy-jjtech-demo'
-        dockerImageTag = "${BUILD_NUMBER}"
-        ecrRegistry = "${awsAccountId}.dkr.ecr.${region}.amazonaws.com"
-      }
-      steps {
-        script {
-            // Build the Docker image
-            sh "cd spring-boot-app && docker build -t ${repositoryName}:${dockerImageTag} ."
+    // stage('Build and Push Docker Image') {
+    //   environment {
+    //     awsAccountId = '017234202077'
+    //     region = 'us-east-1'
+    //     repositoryName = 'tommy-jjtech-demo'
+    //     dockerImageTag = "${BUILD_NUMBER}"
+    //     ecrRegistry = "${awsAccountId}.dkr.ecr.${region}.amazonaws.com"
+    //   }
+    //   steps {
+    //     script {
+    //         // Build the Docker image
+    //         sh "cd spring-boot-app && docker build -t ${repositoryName}:${dockerImageTag} ."
 
-            // Authenticate and push the Docker image to ECR
-                sh "aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecrRegistry}"
-                sh "docker tag ${repositoryName}:${dockerImageTag} ${ecrRegistry}/${repositoryName}:${dockerImageTag}"
-                sh "docker push ${ecrRegistry}/${repositoryName}:${dockerImageTag}"
-                sh "docker rmi ${ecrRegistry}/${repositoryName}:${dockerImageTag}"
-                sh " docker rmi ${repositoryName}:${dockerImageTag}"
-      }
-    }
+    //         // Authenticate and push the Docker image to ECR
+    //             sh "aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecrRegistry}"
+    //             sh "docker tag ${repositoryName}:${dockerImageTag} ${ecrRegistry}/${repositoryName}:${dockerImageTag}"
+    //             sh "docker push ${ecrRegistry}/${repositoryName}:${dockerImageTag}"
+    //             sh "docker rmi ${ecrRegistry}/${repositoryName}:${dockerImageTag}"
+    //             sh " docker rmi ${repositoryName}:${dockerImageTag}"
+    //   }
+    // }
 
-    } 
-    
-    stage('Install kubectl') {
-            steps {
-                sh '''
-                    # Specify the kubectl version
-                    KUBECTL_VERSION="v1.24.0"
+    // } 
 
-                    # Download kubectl binary
-                    curl -LO "https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+    // stage('Install kubectl') {
+    //         steps {
+    //             sh '''
+    //                 # Specify the kubectl version
+    //                 KUBECTL_VERSION="v1.24.0"
 
-                    # Make the kubectl binary executable
-                    sudo chmod +x kubectl
+    //                 # Download kubectl binary
+    //                 curl -LO "https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
 
-                    # Move kubectl binary to a directory in the PATH
-                    sudo mv kubectl /usr/local/bin/
-                '''
-            }
-        }
+    //                 # Make the kubectl binary executable
+    //                 sudo chmod +x kubectl
+
+    //                 # Move kubectl binary to a directory in the PATH
+    //                 sudo mv kubectl /usr/local/bin/
+    //             '''
+    //         }
+    //     }
         
 
-    stage("Deploy to EKS"){
-        environment {
-        region = 'us-east-1'
-        clusterName = 'jjtech-demo-cluster'
-      }       
-        steps {  
-          script {
-            sh "sed -i 's/replaceImageTag/${BUILD_NUMBER}/g' k8s-manifests/deployment.yaml"
-            dir('k8s-manifests'){      
-            sh "aws eks update-kubeconfig --name ${clusterName} --region ${region}"
-            sh "kubectl apply -f ."
-      }
-        }
-      }
-    }
+    // stage("Deploy to EKS"){
+    //     environment {
+    //     region = 'us-east-1'
+    //     clusterName = 'jjtech-demo-cluster'
+    //   }       
+    //     steps {  
+    //       script {
+    //         sh "sed -i 's/replaceImageTag/${BUILD_NUMBER}/g' k8s-manifests/deployment.yaml"
+    //         dir('k8s-manifests'){      
+    //         sh "aws eks update-kubeconfig --name ${clusterName} --region ${region}"
+    //         sh "kubectl apply -f ."
+    //   }
+    //     }
+    //   }
+    // }
   
     stage('approve destroy for terraform') {
             steps {
