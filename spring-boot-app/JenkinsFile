@@ -1,7 +1,6 @@
 pipeline {
-  agent any  #means any jenkins agent/servers in a situation where we have jenkins cluster.
+  agent any  //means any jenkins agent/servers in a situation where we have jenkins cluster.
   
-
   // environment variables to be stored on jenkins server.
   environment {
         WORKSPACE = "${env.WORKSPACE}"
